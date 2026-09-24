@@ -256,6 +256,9 @@ textarea{resize:vertical; min-height:60px}
 .picker-map{border:1px solid var(--line); background:var(--paper-raised); margin-top:4px; position:relative; touch-action:none}
 .picker-map svg{display:block; width:100%; height:auto; cursor:crosshair}
 .picker-hint{font-size:.78rem; color:var(--ink-soft); margin-top:4px}
+.photo-picker{display:flex; align-items:center; gap:12px; flex-wrap:wrap}
+.photo-picker img{width:100px; height:75px; object-fit:cover; border:1px solid var(--line); background:var(--line)}
+.photo-picker input[type="file"]{flex:1; min-width:180px; padding:8px}
 .admin-list{border:1px solid var(--line); border-top:none}
 .admin-row{display:flex; align-items:center; gap:12px; padding:10px 14px; border-top:1px solid var(--line)}
 .admin-row .ttl{flex:1}
@@ -374,6 +377,13 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
             <div class="field"><label for="f-duration">Durée (mm:ss, optionnel)</label><input id="f-duration" placeholder="ex. 4:12"></div>
             <div class="field"><label for="f-note">Note (optionnel)</label><input id="f-note" placeholder="un souvenir, une anecdote…"></div>
             <div class="field full">
+              <label for="f-photo">Miniature (optionnel — une image de ton choix, sinon un fond de couleur généré)</label>
+              <div class="photo-picker">
+                <img id="photo-preview" alt="" hidden>
+                <input id="f-photo" type="file" accept="image/*">
+              </div>
+            </div>
+            <div class="field full">
               <label>Emplacement sur la carte — cliquez pour placer le repère</label>
               <div class="picker-map" id="picker-map"></div>
               <p class="picker-hint" id="picker-hint">Aucun emplacement choisi.</p>
@@ -420,8 +430,10 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
   {"id":"cote-bleue","title":"CÔTE BLEUE","country":"France","region":"Méditerranée","youtubeId":"SstOfzEgcWA","durationSec":138,"month":2,"year":2026,"dateLabel":null,"x":433.5,"y":168.4,"note":"","photo":"thumbs/SstOfzEgcWA.jpg"},
   {"id":"copenhagen","title":"COPENHAGEN","country":"Danemark","region":"Hygge","youtubeId":"45B3_ahrAFk","durationSec":232,"month":4,"year":2026,"dateLabel":null,"x":452.0,"y":129.6,"note":"","photo":"thumbs/45B3_ahrAFk.jpg"},
   {"id":"madeira","title":"MADEIRA","country":"Portugal","region":"Flowers Island","youtubeId":"Rdbt7OZYon4","durationSec":498,"month":5,"year":2026,"dateLabel":null,"x":380.1,"y":200.9,"note":"","photo":"thumbs/Rdbt7OZYon4.jpg"},
-  {"id":"crete-mufkzalx","title":"CRETE","country":"GRECE","region":"KALIMERA","youtubeId":"yz3dhU8DZls","durationSec":null,"month":6,"year":2024,"dateLabel":null,"x":483.5,"y":193,"note":"","photo":"thumbs/yz3dhU8DZls.jpg"},
-  {"id":"toscana-mufl0tl6","title":"TOSCANA","country":"ITALIE","region":"GLADIATOR","youtubeId":"RKZeg9FAC6Y","durationSec":null,"month":7,"year":2026,"dateLabel":null,"x":448.8,"y":169.5,"note":"","photo":"thumbs/RKZeg9FAC6Y.jpg"}
+  {"id":"crete-mufkzalx","title":"CRETE","country":"Grèce","region":"Kalimera","youtubeId":"yz3dhU8DZls","durationSec":null,"month":6,"year":2024,"dateLabel":null,"x":483.5,"y":193,"note":"","photo":"thumbs/yz3dhU8DZls.jpg"},
+  {"id":"toscana-mufl0tl6","title":"TOSCANA","country":"Italie","region":"Gladiator","youtubeId":"RKZeg9FAC6Y","durationSec":null,"month":7,"year":2026,"dateLabel":null,"x":448.8,"y":169.5,"note":"","photo":"thumbs/RKZeg9FAC6Y.jpg"},
+  {"id":"dubrovnik-muflab1c","title":"DUBROVNIK","country":"Croatie","region":"Port Réal","youtubeId":"dAnFZ69sGwk","durationSec":null,"month":6,"year":2022,"dateLabel":null,"x":462.4,"y":168.4,"note":"","photo":"thumbs/dAnFZ69sGwk.jpg"},
+  {"id":"catalunya-muflhwhe","title":"CATALUNYA","country":"France - Espagne","region":"Aventura","youtubeId":"QRYhKO2j0yE","durationSec":null,"month":9,"year":2024,"dateLabel":null,"x":426,"y":172.7,"note":"","photo":null}
 ]
 </script>
 
@@ -759,6 +771,37 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
 
   /* ---------------- admin ---------------- */
   let pickedXY = null;
+  let pickedPhoto; // undefined = keep existing (edit) / none (new), null = cleared, string = new data URL
+
+  function fileToResizedDataURL(file, maxW, maxH, quality){
+    return new Promise((resolve, reject)=>{
+      const reader = new FileReader();
+      reader.onload = e=>{
+        const img = new Image();
+        img.onload = ()=>{
+          const scale = Math.min(1, maxW/img.width, maxH/img.height);
+          const w = Math.max(1, Math.round(img.width*scale));
+          const h = Math.max(1, Math.round(img.height*scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  document.getElementById('f-photo').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    pickedPhoto = await fileToResizedDataURL(file, 720, 720, 0.82);
+    const prev = document.getElementById('photo-preview');
+    prev.src = pickedPhoto;
+    prev.hidden = false;
+  });
 
   function renderAdmin(){
     document.getElementById('admin-count').textContent = TRIPS.length;
@@ -807,6 +850,8 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
     pickedXY = null;
     document.getElementById('picker-hint').textContent = 'Aucun emplacement choisi.';
     renderPickerMap();
+    pickedPhoto = undefined;
+    document.getElementById('photo-preview').hidden = true;
   }
   function startEdit(id){
     const t = TRIPS.find(x=>x.id===id);
@@ -820,6 +865,9 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
     document.getElementById('f-year').value = t.year||'';
     document.getElementById('f-duration').value = t.durationSec ? fmtDuration(t.durationSec) : '';
     document.getElementById('f-note').value = t.note||'';
+    pickedPhoto = undefined;
+    const prev = document.getElementById('photo-preview');
+    if(t.photo){ prev.src = t.photo; prev.hidden = false; } else { prev.hidden = true; }
     pickedXY = (t.x!=null && t.y!=null) ? {x:t.x,y:t.y} : null;
     document.getElementById('picker-hint').textContent = pickedXY ? ('Repère placé (x:'+pickedXY.x+', y:'+pickedXY.y+').') : 'Aucun emplacement choisi.';
     renderPickerMap();
@@ -859,7 +907,7 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
       x: pickedXY ? pickedXY.x : null,
       y: pickedXY ? pickedXY.y : null,
       note: document.getElementById('f-note').value.trim(),
-      photo: (existing && existing.youtubeId===ytId) ? existing.photo : null,
+      photo: pickedPhoto !== undefined ? pickedPhoto : ((existing && existing.youtubeId===ytId) ? existing.photo : null),
       dateLabel: existing ? existing.dateLabel : null,
     };
     let next = TRIPS.slice();
