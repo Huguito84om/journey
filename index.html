@@ -302,25 +302,26 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
 
   <section data-view="home" id="view-home">
     <div class="title-page wrap">
-      <p class="eyebrow">Carnet de voyage — Hugo Veyrier</p>
+      <p class="eyebrow">Carnet de voyage — Hugo</p>
       <h1>JOURNEY</h1>
       <p class="lede">Chaque voyage devient une vidéo, chaque vidéo une trace. Ce site rassemble nos escapades filmées : un catalogue à parcourir, une carte à explorer, une timeline à remonter.</p>
       <p class="links-row">
-        <a href="#catalogue" data-nav="#catalogue">Voir le catalogue →</a>
+        <a href="#catalogue" data-nav="#catalogue">Parcourir le catalogue →</a>
         <a href="#carte" data-nav="#carte">Explorer la carte →</a>
+        <a href="#timeline" data-nav="#timeline">Remonter la timeline →</a>
       </p>
+    </div>
+
+    <div class="about-block wrap">
+      <p class="dropcap">Je suis Hugo, et depuis quelques années je pars à la découverte de notre belle planète tout en documentant mes aventures.</p>
+      <p>Ce n'est jamais le but du voyage, mais c'est devenu un réflexe, filmer une ruelle, une table de petit-déjeuner, une route de montagne, pour en garder un instant animé.</p>
+      <p>Rien ne m'apprend autant que le voyage. Sortir de chez soi, c'est comprendre qu'il existe autant de façons de vivre que d'endroits où poser les pieds et qu'aucune n'est la seule bonne. Proust disait que « le voyage n'est pas de voir des paysages nouveaux, mais d'avoir des yeux nouveaux. » C'est peut-être pour ça que je filme : pour garder une trace de ces yeux-là.</p>
+      <p class="signature">— Hugo</p>
     </div>
 
     <div class="hero-cover" id="hero-cover"></div>
 
     <p class="stats-line" id="stats-strip"></p>
-
-    <div class="about-block wrap">
-      <h2>Pourquoi ce site</h2>
-      <p class="dropcap">Je suis Hugo, et depuis quelques années je pars en voyage avec une caméra autant qu'avec une valise. Ce n'est jamais le but du voyage — mais c'est devenu un réflexe : filmer une ruelle, une table de petit-déjeuner, une route de montagne, pour en garder autre chose que des photos.</p>
-      <p>Chaque vidéo finit sur ma chaîne YouTube, perdue au milieu de tout le reste. Ce site est né pour leur donner une vraie place : un endroit pensé pour vous, la famille, où retrouver ces voyages sous plusieurs formes — un catalogue simple, une carte du monde, une chronologie. La liste s'allonge au fil des montages, alors revenez de temps en temps.</p>
-      <p class="signature">— Hugo</p>
-    </div>
   </section>
 
   <section data-view="catalogue" id="view-catalogue">
@@ -418,7 +419,9 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
   {"id":"north-thailand","title":"NORTH THAILAND","country":"Thaïlande","region":"Chiang Mai","youtubeId":"X_EucOUPn3w","durationSec":477,"month":1,"year":2026,"dateLabel":null,"x":669.5,"y":237.7,"note":"","photo":"thumbs/X_EucOUPn3w.jpg"},
   {"id":"cote-bleue","title":"CÔTE BLEUE","country":"France","region":"Méditerranée","youtubeId":"SstOfzEgcWA","durationSec":138,"month":2,"year":2026,"dateLabel":null,"x":433.5,"y":168.4,"note":"","photo":"thumbs/SstOfzEgcWA.jpg"},
   {"id":"copenhagen","title":"COPENHAGEN","country":"Danemark","region":"Hygge","youtubeId":"45B3_ahrAFk","durationSec":232,"month":4,"year":2026,"dateLabel":null,"x":452.0,"y":129.6,"note":"","photo":"thumbs/45B3_ahrAFk.jpg"},
-  {"id":"madeira","title":"MADEIRA","country":"Portugal","region":"Flowers Island","youtubeId":"Rdbt7OZYon4","durationSec":498,"month":5,"year":2026,"dateLabel":null,"x":380.1,"y":200.9,"note":"","photo":"thumbs/Rdbt7OZYon4.jpg"}
+  {"id":"madeira","title":"MADEIRA","country":"Portugal","region":"Flowers Island","youtubeId":"Rdbt7OZYon4","durationSec":498,"month":5,"year":2026,"dateLabel":null,"x":380.1,"y":200.9,"note":"","photo":"thumbs/Rdbt7OZYon4.jpg"},
+  {"id":"crete-mufkzalx","title":"CRETE","country":"GRECE","region":"KALIMERA","youtubeId":"yz3dhU8DZls","durationSec":null,"month":6,"year":2024,"dateLabel":null,"x":483.5,"y":193,"note":"","photo":"thumbs/yz3dhU8DZls.jpg"},
+  {"id":"toscana-mufl0tl6","title":"TOSCANA","country":"ITALIE","region":"GLADIATOR","youtubeId":"RKZeg9FAC6Y","durationSec":null,"month":7,"year":2026,"dateLabel":null,"x":448.8,"y":169.5,"note":"","photo":"thumbs/RKZeg9FAC6Y.jpg"}
 ]
 </script>
 
@@ -503,11 +506,8 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
   /* ---------------- home ---------------- */
   function renderHome(){
     const nCountries = new Set(TRIPS.map(t=>t.country)).size;
-    const totalSec = TRIPS.reduce((s,t)=>s+(t.durationSec||0),0);
-    const h = Math.floor(totalSec/3600), m = Math.round((totalSec%3600)/60);
-    const durLabel = h>0 ? (h+"h"+String(m).padStart(2,'0')) : (m+" min");
     document.getElementById('stats-strip').innerHTML =
-      '<b>'+TRIPS.length+'</b> vidéos &nbsp;—&nbsp; <b>'+nCountries+'</b> pays &nbsp;—&nbsp; <b>'+durLabel+'</b> de voyage filmé';
+      '<b>'+TRIPS.length+'</b> vidéos &nbsp;—&nbsp; <b>'+nCountries+'</b> pays';
 
     const latest = TRIPS.slice().sort((a,b)=>(b.year||0)-(a.year||0) || ((b.month||0)-(a.month||0)))[0];
     const cover = document.getElementById('hero-cover');
@@ -522,7 +522,7 @@ footer .foot-dot:hover{color:var(--brass); border-color:var(--brass)}
   /* ---------------- catalogue ---------------- */
   function renderCatalogue(){
     const grid = document.getElementById('catalogue-grid');
-    document.getElementById('cat-count').textContent = TRIPS.length + " vidéos";
+    document.getElementById('cat-count').textContent = TRIPS.length + " vidéos pour l'instant — la liste s'allonge à chaque retour de voyage";
     const sorted = TRIPS.slice().sort((a,b)=>{
       const ay=a.year||0, by=b.year||0;
       if(ay!==by) return by-ay;
